@@ -1,0 +1,58 @@
+{% extends 'run.html' %}
+
+{% load static %}
+{% load widget_tweaks %}
+
+{% block javascript %}
+<script src="{% static 'js/igv.min.js' %}"></script>
+<script type="text/javascript">
+	document.addEventListener("DOMContentLoaded", function () {
+
+		{% for key, value in files %}
+		
+		var igvDiv_{{ forloop.counter }} = document.getElementById("igvDiv_{{ forloop.counter }}");
+
+		var options_{{ forloop.counter }} =
+		{
+			reference: { fastaURL: "{{ value.0 }}", indexed: false, cytobandURL: "{{ value.1 }}" },
+			locus: 'test', showNavigation: true, showRuler: true, supportQueryParameters: false, minimumBases: 70,
+			tracks: [
+				{ name: "Primers and probes", type: "annotation", format: "gff3", url: "{{ value.2 }}", indexed: false, displayMode: "SQUISHED" },
+				{ name: "Products", type: "annotation", format: "gff3", url: "{{ value.3 }}", indexed: false, displayMode: "SQUISHED" }
+			]
+		};
+
+
+		igv.createBrowser(igvDiv_{{ forloop.counter }}, options_{{ forloop.counter }})
+			.then(function (browser) {
+				console.log("Created IGV browser");
+			})
+		{% endfor %}
+	});
+
+</script>
+{% endblock %}
+
+{% block runcontent %}
+
+<div class="container mt-3">
+<div class="row">
+<p>
+Each cytogenetic band represents a part of a (pseudo-)contig of an uploaded genome from the genetic location of the first primer binding to the genetic location of the last primer binding. <span style="color: #178ae5;">Forward primers</span> are colored in <span style="color: #178ae5;">blue</span>, while <span style="color: #65621c;">reverse primers</span> are colored in <span style="color: #65621c;">dark green</span>. <span style="color: #28f215;">Probes</span> are shown in <span style="color: #28f215;">light green</span> and products in <span style="color: #9a4b4b;">dark red</span> or <span style="color: #af7052;">orange</span>. Zooming in and clicking on the different bars will reveal more information.
+</p>
+</div>
+</div>
+
+{% if files|length == 0 %}
+No primers and/or probes found.
+{% endif %}
+
+{% for key,value in files %}
+	<h3 style="padding-top: 15px; padding-bottom: 10px;">{{ key }}</h3>
+	<div id="igvDiv_{{ forloop.counter }}" style="padding-top: 10px;padding-bottom: 10px; max-width: 1100px;"></div>
+	<hr />
+
+{% endfor %}
+
+{% endblock %}
+

@@ -1,0 +1,17 @@
+{% load env %}
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<title>PRIMEval Run #{{runid}} completed</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	</head>
+	<body>
+		<p>Dear PRIMEval user,</p>
+		<p>your <a href="{% 'BASE_URL'|env %}run/{{runid}}">job {{runid}}</a> has finished running on the PRIMEval server.</p>
+		<p>You can access it by clicking on the provided link or by entering the following URL in your browser: {% 'BASE_URL'|env %}run/{{runid}}</p>
+		<p>Thank you for using PRIMEval.</p>
+	</body>
+</html>
+

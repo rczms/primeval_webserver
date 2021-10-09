@@ -1,0 +1,54 @@
+{% load static %}<!DOCTYPE html>
+<html>
+	<head>
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-131448535-1"></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+			gtag('config', 'UA-131448535-1');
+		</script>
+		<meta charset="utf-8">
+		<title>{% block title %}PRIMEval{% endblock %}</title>
+		<link rel="shortcut icon" type="image/png" href="{% static 'img/favicon.ico' %}"/>
+		<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+		<link rel="stylesheet" href="{% static 'css/PRIMEval.css' %}">
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css" integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz" crossorigin="anonymous">
+		{% block stylesheet %}
+		{% endblock %}
+	</head>
+	<body>
+		{% block body %}
+			<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+					<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#mainMenu" aria-controls="mainMenu" aria-expanded="false" aria-label="Toggle navigation">
+						<span class="navbar-toggler-icon"></span>
+					</button>
+
+					<div class="collapse navbar-collapse" id="navbarTogglerDemo01">
+						<a class="navbar-brand" href="{% url 'home' %}">PRIMEval</a>
+						<ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+							<li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Job submission</a></li>
+							<li class="nav-item"><a class="nav-link" href="{% url 'arvi' %}">ARVI</a></li>
+							<li class="nav-item"><a class="nav-link" href="{% url 'help' %}">Help</a></li>
+							<li class="nav-item"><a class="nav-link" href="{% url 'impressum' %}">Impressum</a></li>
+						</ul>
+					</div>
+			</nav>
+			<div class="container">
+				<ol class="breadcrumb my-4">
+					{% block breadcrumb %}
+					{% endblock %}
+				</ol>
+				{% block content %}
+				{% endblock %}
+			</div>
+		{% endblock body %}
+		<script src="{% static 'js/popper.min.js' %}"></script>
+		<script src="{% static 'js/jquery.min.js' %}"></script>
+		<script src="{% static 'js/PRIMEval.js' %}"></script>
+		<script src="{% static 'js/bootstrap.min.js' %}"></script>
+		{% block javascript %}
+		{% endblock javascript %}
+	</body>
+</html>

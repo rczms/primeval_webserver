@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load widget_tweaks %}
+
+{% block breadcrumb %}
+	<li class="breadcrumb-item active">(ARVI) Antibiotic resistance gene and virulence factor identifier</li>
+{% endblock %}
+
+{% block stylesheet %}
+	<link rel="stylesheet" href="{% static 'css/dropzone.min.css' %}">
+	<style>
+		.btn-space {
+			margin-right: 5px;
+			margin-bottom: 5px;
+		}
+		.spacer10 {
+			height: 10px;
+		}
+	</style>
+{% endblock %}
+
+{% block javascript %}
+<script src="{% static 'js/dropzone.min.js' %}"></script>
+<script>
+	var previewNode = document.querySelector("#template");
+	var previewTemplate = previewNode.parentNode.innerHTML;
+	var uploadInProgress = 0;
+	previewNode.parentNode.removeChild(previewNode);
+
+	Dropzone.createElement = function(string) {
+		var el = $(string);
+		return el[0];
+	};
+
+	var myDropzone = new Dropzone(document.body, { 
+		url: "{% url 'arvi' %}",
+		paramName: "document",
+		parallelUploads: 1,
+		timeout: 300000,
+		maxFilesize: 1000,
+		uploadMultiple: false,
+		createImageThumbnails: false,
+		ignoreHiddenFiles: true,
+		//acceptedFiles: "text/plain,application/x-bzip2,application/gzip,.txt,.fasta,.csv,.fas,.fa,.seq,.fsa,.fna,.ffn,.faa,.frn,,",
+		acceptedFiles: "text/plain,.txt,.fasta,.fas,.fa,.seq,.fsa,.fna,.ffn,.faa,.frn,,",
+		previewTemplate: previewTemplate,
+		autoQueue: true,
+		autoProcessQueue: true,
+		forceFallback: false,
+		addRemoveLinks: false,
+		previewsContainer: "#previews",
+		clickable: ".fileinput-button",
+	});
+
+	myDropzone.on("success", function(file, response) {
+		file.previewElement.id = response.name;
+		if (response.upload_error != false) {
+			file.previewElement.remove();
+			for (name in response.upload_error) {
+				$('div.files table').before('<div class="file-errors alert alert-danger"><u>' + file.name + '</u>: ' + response.upload_error[name] + '</div>');
+			}
+		}
+		else {
+			$('tr[id="' + response.name + '"] td p.type').text(response.seqtype);
+		}
+	});
+
+	myDropzone.on("sending", function(file, xhr, formData) {
+		uploadInProgress = 1;
+		formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+		formData.append("seqtype", "contig");
+		formData.append("tmpRunID", "{{ runid }}");
+	});
+
+	myDropzone.on("queuecomplete", function(file) {
+		uploadInProgress = 0;
+	});
+
+	$('#submitrun').click(function() {
+		if (uploadInProgress == 1) {
+			$('div button[id="submitrun"]').before('<div class="upload-errors alert alert-danger">Uploads are still progressing. Please wait until you submit the run.</div>');
+			return false;
+		}
+		$.ajax({
+			url  : '/arvi/',
+			type : 'POST',
+			data : $('#arvisettings').serialize(),
+			beforeSend: function() {
+				$(".upload-errors").remove();
+				$(".invalid-feedback").remove();
+				$(".is-invalid").removeClass("is-invalid");
+			},
+			success : function(data) {
+				if (data.runform_is_valid == true) {
+					window.location.href = "/run/{{ runid }}"; 
+				}
+				else {
+					if (data.run_form_errors != false) {
+						for (name in data.run_form_errors) {
+							var elem = document.getElementsByName(name)[0];
+							console.log(name)
+							elem.classList.add("is-invalid");
+							$("input[name=" + name + "]").after('<div class="invalid-feedback">' + data.run_form_errors[name] + '</div>');
+						}
+					}
+					if (data.other_errors != false) {
+						$('div button[id="submitrun"]').before('<div class="upload-errors alert alert-danger">' + data.other_errors + '</div>');
+					}
+				}
+			},
+			error : function() {
+				$('div button[id="submitrun"]').before('<div class="upload-errors alert alert-danger">Problem in submitting data to the server. Please retry later if the problem persists.</div>');
+			}
+		});
+		return false;
+	});
+
+	$(function () {
+		$('[data-toggle="tooltip"]').tooltip()
+	});
+
+</script>
+{% endblock javascript %}
+
+{% block content %}
+
+	<div class="row">
+		<div class="col-lg-6">
+			<form id="arvisettings">
+				<h3>Settings</h3>
+				{% csrf_token %}
+				{% for field in arvi_fields %}
+					<div class="form-group">
+						{% if not field.is_hidden %}
+							<span style="width: 90%; display: inline-block;">{{ field.label_tag }}</span>
+							{% if field.help_text %}
+								<span><a href="#" data-toggle="tooltip" title="{{ field.help_text }}"><i class="far fa-question-circle"></i></a></span>
+							{% endif %}
+						{% endif %}
+						{% render_field field class="form-control" %}
+					</div>
+				{% endfor %}
+				<div class="form-group">
+					<button id="submitrun" class="btn btn-success">Start run</button>
+				</div>
+			</form>
+		</div>
+		<div class="col-lg-6">
+			<span style="width: 90%; display: inline-block;"><h3>Contig upload</h3></span>
+			<span><a href="#" data-toggle="tooltip" title="Contigs are accepted in the FASTA format with multiple contigs in one file for one sample."><i class="far fa-question-circle"></i></a></span>
+				<span class="btn btn-space btn-secondary fileinput-button contig-button">
+					<i class="glyphicon glyphicon-ban-circle"></i>
+					<span><i class="fas fa-file-upload"></i> Upload contigs</span>
+				</span>
+			<div class="spacer10"></div>
+			<div class="table table-striped table-responsive table-sm files">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>File</th>
+							<th>Size</th>
+							<th>Type</th>
+							<th>Status</th>
+						</tr>
+					</thead>
+					<tbody id="previews">
+						<tr id="template">
+							<td style="min-width: 100px; max-width: 100px; word-wrap: break-word;"><p class="name my-0" data-dz-name></p><strong class="error text-danger my-0" data-dz-errormessage></strong></td>
+							<td><p class="size my-0" data-dz-size></p></td>
+							<td><p class="type my-0"></p></td>
+							<td>
+								<div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="30">
+									<div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress></div>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+{% endblock %}

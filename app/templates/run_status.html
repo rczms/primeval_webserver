@@ -1,0 +1,131 @@
+{% extends 'run.html' %}
+
+{% load static %}
+{% load widget_tweaks %}
+
+{% block javascript %}
+<script>
+	function worker(){
+		var url =  '/run/{{ runid }}/status';
+		$.ajax({
+			type:'get',
+			url: url,
+			success: function(data) {
+				$('.{{ method }}').removeClass("d-none");
+				$('.{{ oligos }}').removeClass("d-none");
+				$('.{{ dimer_check }}').removeClass("d-none");
+				var obj = JSON.parse(data);
+				
+				for (var i = 0; i < obj.length; i++) {
+					var s = obj[i];
+					var step = s.step + s.substep;
+
+					if (s.step == "Upload" && s.substep == "Upload" && s.finished == true && s.running == false) {
+						location.reload(true);
+					}
+
+					var status = "";
+					if (s.running == false && s.finished == false) {
+						var status = "Failed";
+						location.reload(true);
+					} else if (s.running == false && s.finished == true) {
+						var status = "Finished";
+					} else if (s.running == true && s.finished == false) {
+						var status = "Active";
+					} else {
+						console.log("Combination not valid.")
+					}
+
+					$("." + step).removeClass("table-danger table-success table-active");
+					$("." + step + " td i").removeClass("fas fa-spinner fa-spin fa-lg fa-check fa-times");
+					if (status == "Finished") {
+						$("." + step).addClass("table-success");
+						$("." + step + " td i").addClass("fas fa-check fa-lg");
+					} else if (status == "Active") {
+						$("." + step).addClass("table-active");
+						$("." + step + " td i").addClass("fas fa-spinner fa-spin fa-lg");
+					} else if (status == "Failed") {
+						$("." + step).addClass("table-danger");
+						$("." + step + " td i").addClass("fas fa-times fa-lg");
+					} else {
+						console.log("Unknown status")
+					}
+				}
+				
+
+
+			},
+			complete: function() {
+				setTimeout(worker, 2000);
+			}
+		});
+	}
+	$(document).ready(function(){
+		setTimeout(worker, 0);
+	});
+</script>
+{% endblock %}
+
+{% block runcontent %}
+
+<table class="table">
+	<thead>
+		<tr class="header">
+			<th>Status</th>
+			<th>Step</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr class="SubmissionSubmission">
+			<td><i class=""></i></td>
+			<td>Run submitted. Waiting to transfer the files to the server.</td>
+		</tr>
+		<tr class="DownloadDownload DownloadExtraction DownloadQueued">
+			<td><i class=""></i></td>
+			<td>Downloading and extracting files on the server, then enqueuing the run.</td>
+		</tr>
+		<tr class="PRIMEvalPreparingFolders PRIMEvalImportingSequences">
+			<td><i class=""></i></td>
+			<td>Preparing folders and importing oligos.</td>
+		</tr>
+		<tr class="PRIMEvalDimerCheck dimer_check d-none">
+			<td><i class=""></i></td>
+			<td>Cross- and self-dimer check according to the chosen input parameters.</td>
+		</tr>
+		<tr class="PRIMEvalCreatingBLASTDB PRIMEvalRunningBLAST blast d-none">
+			<td><i class=""></i></td>
+			<td>Creating BLAST database and running BLAST.</td>
+		</tr>
+		<tr class="PRIMEvalCreatingBowtieIndex PRIMEvalRunningBowtie PRIMEvalConvertingBowtieHits bowtie d-none">
+			<td><i class=""></i></td>
+			<td>Creating Bowtie index and running Bowtie.</td>
+		</tr>
+		<tr class="PRIMEvalAddOligosToAhoCorasickAutomaton PRIMEvalRunningAhoCorasickStringSearch aho-corasick d-none">
+			<td><i class=""></i></td>
+			<td>Creating Aho-Corasick automaton and running Aho-Corasick string search.</td>
+		</tr>
+		<tr class="PRIMEvalSplittingOutputFiles PRIMEvalProcessingOutputFiles">
+			<td><i class=""></i></td>
+			<td>Splitting and processing output files.</td>
+		</tr>
+		<tr class="PRIMEvalProcessingProbesOnly probes d-none">
+			<td><i class=""></i></td>
+			<td>Processing probes only and saving results.</td>
+		</tr>
+		<tr class="PRIMEvalProcessingHits PRIMEvalSaveAllResults PRIMEvalParseWobbledResults PRIMEvalSaveWobbledResults PRIMEvalCleanUpFolders all d-none">
+			<td><i class=""></i></td>
+			<td>Processing hits and matching probes to corresponding primers.</td>
+		</tr>
+		<tr class="PRIMEvalRun">
+			<td><i class=""></i></td>
+			<td>PRIMEval run completed. Enqueuing output files for upload to the webserver.</td>
+		</tr>
+		<tr class="UploadQueued UploadUpload">
+			<td><i class=""></i></td>
+			<td>Upload completed. Results should now be accessible.</td>
+		</tr>
+	</tbody>
+</table>
+
+
+{% endblock %}

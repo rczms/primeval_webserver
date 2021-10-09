@@ -1,0 +1,63 @@
+{% extends 'run.html' %}
+
+{% load static %}
+{% load widget_tweaks %}
+
+{% block javascript %}
+{% endblock %}
+
+{% block runcontent %}
+
+{% if results|length == 0 %}
+No primers and/or probes found.
+{% endif %}
+
+<div class="container mt-3">
+<div class="row">
+<p>
+This table lists all primers and probes binding to the uploaded contigs, independently whether they form products in PCR. Complete information can be downloaded from the <a href="{% url 'run' runid 'download' %}">download section</a>.
+</p>
+</div>
+</div>
+
+{% for sequence, all_hits in results.items %}
+
+	<h3 style="padding-top: 15px; padding-bottom: 10px;">{{ sequence }}</h3>
+
+	<div class="table-responsive-sm">
+	<table class="table" style="font-size: 12px;">
+		<thead>
+			<tr>
+				<th scope="col">Type</th>
+				<th scope="col">Name</th>
+				<th scope="col">Package</th>
+				<th scope="col">StartPos</th>
+				<th scope="col">EndPos</th>
+				<th scope="col">Mismatches</th>
+				<th scope="col">Strand</th>
+				<th scope="col">HitSequence</th>
+				<th scope="col">Contig</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for hit in all_hits %}
+				<tr>
+					<td>{{ hit.Type }}</td>
+					<td>{{ hit.Name }}</td>
+					<td>{{ hit.Package }}</td>
+					<td>{{ hit.StartPos|floatformat:0 }}</td>
+					<td>{{ hit.EndPos|floatformat:0 }}</td>
+					<td>{{ hit.MismatchesTotal|floatformat:0 }}</td>
+					<td>{% if hit.Strand == 1 %}+{% else %}-{% endif %}</td>
+					<td style="word-wrap: break-word; min-width: 150px; max-width: 150px;">{{ hit.HitSequence }}</td>
+					<td style="word-wrap: break-word; min-width: 150px; max-width: 150px;">{{ hit.Contig }}</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	</div>
+
+{% endfor %}
+
+{% endblock %}
+

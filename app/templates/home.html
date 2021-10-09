@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load widget_tweaks %}
+
+{% block breadcrumb %}
+	<li class="breadcrumb-item active">PRIMEval Job submission</li>
+{% endblock %}
+
+{% block stylesheet %}
+	<link rel="stylesheet" href="{% static 'css/dropzone.min.css' %}">
+	<style>
+		.btn-space {
+			margin-right: 5px;
+			margin-bottom: 5px;
+		}
+		.spacer10 {
+			height: 10px;
+		}
+	</style>
+{% endblock %}
+
+{% block javascript %}
+<script src="{% static 'js/dropzone.min.js' %}"></script>
+<script>
+	var previewNode = document.querySelector("#template");
+	var previewTemplate = previewNode.parentNode.innerHTML;
+	var uploadInProgress = 0;
+	previewNode.parentNode.removeChild(previewNode);
+
+	Dropzone.createElement = function(string) {
+		var el = $(string);
+		return el[0];
+	};
+
+	var myDropzone = new Dropzone(document.body, { 
+		url: "{% url 'home' %}",
+		paramName: "document",
+		parallelUploads: 1,
+		timeout: 300000,
+		maxFilesize: 1000,
+		uploadMultiple: false,
+		createImageThumbnails: false,
+		ignoreHiddenFiles: true,
+		//acceptedFiles: "text/plain,application/x-bzip2,application/gzip,.txt,.fasta,.csv,.fas,.fa,.seq,.fsa,.fna,.ffn,.faa,.frn,,",
+		acceptedFiles: "text/plain,.txt,.fasta,.csv,.fas,.fa,.seq,.fsa,.fna,.ffn,.faa,.frn,,",
+		previewTemplate: previewTemplate,
+		autoQueue: true,
+		autoProcessQueue: true,
+		forceFallback: false,
+		addRemoveLinks: false,
+		previewsContainer: "#previews",
+		clickable: ".fileinput-button",
+	});
+
+	myDropzone.on("success", function(file, response) {
+		file.previewElement.id = response.name;
+		if (response.upload_error != false) {
+			file.previewElement.remove();
+			for (name in response.upload_error) {
+				$('div.files table').before('<div class="file-errors alert alert-danger"><u>' + file.name + '</u>: ' + response.upload_error[name] + '</div>');
+			}
+		}
+		else {
+			$('tr[id="' + response.name + '"] td p.type').text(response.seqtype);
+		}
+	});
+
+	myDropzone.on("sending", function(file, xhr, formData) {
+		uploadInProgress = 1;
+		$(".dz-hidden-input").prop("disabled", true);
+		formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+		formData.append("seqtype", trigger);
+		formData.append("tmpRunID", "{{ runid }}");
+	});
+
+	myDropzone.on("queuecomplete", function(file) {
+		uploadInProgress = 0;
+		$(".dz-hidden-input").prop("disabled", false);
+	});
+
+	document.getElementsByClassName("fileinput-button primer-button")[0].addEventListener("click", function(event) {
+		if (uploadInProgress == 1) {
+			alert("File upload still in progress. Please wait until finished before submitting more files.");
+		} else {
+			trigger = "primer";
+		}
+	});
+	document.getElementsByClassName("fileinput-button probe-button")[0].addEventListener("click", function(event) {
+		if (uploadInProgress == 1) {
+			alert("File upload still in progress. Please wait until finished before submitting more files.");
+		} else {
+			trigger = "probe";
+		}
+	});
+	document.getElementsByClassName("fileinput-button contig-button")[0].addEventListener("click", function(event) {
+		if (uploadInProgress == 1) {
+			alert("File upload still in progress. Please wait until finished before submitting more files.");
+		} else {
+			trigger = "contig";
+		}
+	});
+	document.getElementsByClassName("fileinput-button mapping-button")[0].addEventListener("click", function(event) {
+		if (uploadInProgress == 1) {
+			alert("File upload still in progress. Please wait until finished before submitting more files.");
+		} else {
+			trigger = "mapping";
+		}
+	});
+
+	$('#submitrun').click(function() {
+		if (uploadInProgress == 1) {
+			$('div button[id="submitrun"]').before('<div class="upload-errors alert alert-danger">Uploads are still progressing. Please wait until you submit the run.</div>');
+			return false;
+		}
+		$.ajax({
+			url  : '/',
+			type : 'POST',
+			data : $('#primersettings, #probesettings, #generalsettings').serialize(),
+			beforeSend: function() {
+				$(".upload-errors").remove();
+				$(".invalid-feedback").remove();
+				$(".is-invalid").removeClass("is-invalid");
+			},
+			success : function(data) {
+				if (data.runform_is_valid == true) {
+					window.location.href = "/run/{{ runid }}"; 
+				}
+				else {
+					if (data.run_form_errors != false) {
+						for (name in data.run_form_errors) {
+							var elem = document.getElementsByName(name)[0];
+							elem.classList.add("is-invalid");
+							$("input[name=" + name + "]").after('<div class="invalid-feedback">' + data.run_form_errors[name] + '</div>');
+						}
+					}
+					if (data.other_errors != false) {
+						$('div button[id="submitrun"]').before('<div class="upload-errors alert alert-danger">' + data.other_errors + '</div>');
+					}
+				}
+			},
+			error : function() {
+				$('div button[id="submitrun"]').before('<div class="upload-errors alert alert-danger">Problem in submitting data to the server. Please retry later if the problem persists.</div>');
+			}
+		});
+		return false;
+	});
+
+	/*
+	jQuery(function($) {
+		$('#id_dimerCheck').click(function() {
+			checkDimerCheckbox()
+		});
+	});
+	document.addEventListener('DOMContentLoaded', function() {
+		checkDimerCheckbox()
+	}, false);
+
+	function checkDimerCheckbox() {
+		var cb1 = $('#id_dimerCheck').is(':checked');
+		if (cb1 == true) {
+			$('#id_primerMonovalentCations, #id_primerDivalentCations, #id_primerDNTPs, #id_primerConcentration, #id_probeMonovalentCations, #id_probeDivalentCations, #id_probeDNTPs, #id_probeConcentration').css('background-color', 'white');
+		} else {
+			$('#id_primerMonovalentCations, #id_primerDivalentCations, #id_primerDNTPs, #id_primerConcentration, #id_probeMonovalentCations, #id_probeDivalentCations, #id_probeDNTPs, #id_probeConcentration').css('background-color', 'lightgrey');
+		}
+	};
+	*/
+
+	$(function () {
+		$('[data-toggle="tooltip"]').tooltip()
+	});
+
+</script>
+{% endblock javascript %}
+
+{% block content %}
+
+<div class="alert alert-info">
+	<strong>Have a look at our open access publication: </strong><br /><a href="https://www.nature.com/articles/s41598-019-55883-4">Conzemius, Rick et al., 2019. PRIMEval: Optimization and screening of multiplex oligonucleotide assays. <i>Scientific Reports</i>, 9(1), pp.1-5.</a>
+</div>
+
+<div class="alert alert-info">
+	<strong><a href="help#sample">Sample data</a></strong> and links to <strong><a href="help#sample">sample results</a></strong> can be found in the <a href="{% url 'help' %}">help section</a>.
+</div>
+
+	<div class="row">
+		<div class="col-lg-4">
+			<form id="generalsettings">
+				<h3>General settings</h3>
+				<div><p>If no options are selected, primers only or primers and associated probes can be screened.</p></div>
+				{% for field in general_fields %}
+					<div class="form-group">
+						{% if not field.is_hidden %}
+							<span style="width: 90%; display: inline-block;">{{ field.label_tag }}</span>
+							{% if field.help_text %}
+								<span><a href="#" data-toggle="tooltip" title="{{ field.help_text }}"><i class="far fa-question-circle"></i></a></span>
+							{% endif %}
+						{% endif %}
+						{% render_field field class="form-control" %}
+					</div>
+				{% endfor %}
+			</form>
+				<span style="width: 90%; display: inline-block;"><h3>Sequence upload</h3></span>
+				<span><a href="#" data-toggle="tooltip" title="Each separate primer and probe set needs to be uploaded as a separate FASTA file. Contigs are accepted in the FASTA format with multiple contigs in one file for one sample. See the help section for the nomenclature of matching probe sets and how to create mapping files."><i class="far fa-question-circle"></i></a></span>
+				<span class="btn btn-space btn-success fileinput-button primer-button">
+					<i class="glyphicon glyphicon-plus"></i>
+					<span><i class="fas fa-file-upload"></i> Primer set</span>
+				</span>
+				<span class="btn btn-space btn-primary fileinput-button probe-button">
+					<i class="glyphicon glyphicon-upload"></i>
+					<span><i class="fas fa-file-upload"></i> Probes set</span>
+				</span>
+				<span class="btn btn-space btn-secondary fileinput-button contig-button">
+					<i class="glyphicon glyphicon-ban-circle"></i>
+					<span><i class="fas fa-file-upload"></i> Contigs</span>
+				</span>
+				<span class="btn btn-space btn-warning fileinput-button mapping-button">
+					<i class="glyphicon glyphicon-ban-circle"></i>
+					<span><i class="fas fa-file-upload"></i> Mapping file</span>
+				</span>
+			<div class="spacer10"></div>
+			<div class="table table-striped table-responsive table-sm files">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>File</th>
+							<th>Size</th>
+							<th>Type</th>
+							<th>Status</th>
+						</tr>
+					</thead>
+					<tbody id="previews">
+						<tr id="template">
+							<td style="min-width: 100px; max-width: 100px; word-wrap: break-word;"><p class="name my-0" data-dz-name></p><strong class="error text-danger my-0" data-dz-errormessage></strong></td>
+							<td><p class="size my-0" data-dz-size></p></td>
+							<td><p class="type my-0"></p></td>
+							<td>
+								<div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="30">
+									<div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress></div>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div class="col-lg-4">
+			<form id="primersettings">
+				<h3>Primer settings</h3>	
+				{% csrf_token %}
+				{% for field in primer_fields %}
+					<div class="form-group">
+						{% if not field.is_hidden %}
+							<span style="width: 90%; display: inline-block;">{{ field.label_tag }}</span>
+							{% if field.help_text %}
+								<span><a href="#" data-toggle="tooltip" title="{{ field.help_text }}"><i class="far fa-question-circle"></i></a></span>
+							{% endif %}
+						{% endif %}
+						{% render_field field class="form-control" %}
+					</div>
+				{% endfor %}
+			</form>
+		</div>
+		<div class="col-lg-4">
+			<form id="probesettings">
+				<h3>Probe settings</h3>
+				{% for field in probe_fields %}
+					<div class="form-group">
+						{% if not field.is_hidden %}
+							<span style="width: 90%; display: inline-block;">{{ field.label_tag }}</span>
+							{% if field.help_text %}
+								<span><a href="#" data-toggle="tooltip" title="{{ field.help_text }}"><i class="far fa-question-circle"></i></a></span>
+							{% endif %}
+						{% endif %}
+						{% render_field field class="form-control" %}
+					</div>
+				{% endfor %}
+				<div class="form-group">
+					<button id="submitrun" class="btn btn-success">Start run</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{% endblock %}

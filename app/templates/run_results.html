@@ -1,0 +1,64 @@
+{% extends 'run.html' %}
+
+{% load static %}
+{% load widget_tweaks %}
+{% load replace_probe %}
+
+{% block javascript %}
+{% endblock %}
+
+{% block runcontent %}
+
+{% if results|length == 0 %}
+No matching primer pairs and/or probes found. Check <a href="{% url 'run' runid 'hits' %}">hits</a>!
+{% endif %}
+
+<div class="container mt-3">
+<div class="row">
+<p>
+This table lists all products of forward and reverse primers and eventually matching probes and all mismatches (named MMx). It is indicated whether primers and probes come from the same or different oligo packages (see the <a href="{% url 'help' %}">help section</a> for proper naming of files before upload) and if more probes have the potential to bind to an amplicon. Complete information can be downloaded from the <a href="{% url 'run' runid 'download' %}">download section</a> (all products and wobbled oligos summarized).
+</p>
+</div>
+</div>
+
+{% for sequence, all_hits in results.items %}
+
+	<h3 style="padding-top: 15px; padding-bottom: 10px;">{{ sequence }}</h3>
+
+	<div class="table-responsive-sm">
+	<table class="table" style="font-size: 12px;">
+		<thead>
+			<tr>
+				<th scope="col">Primer1</th>
+				<th scope="col">Primer2</th>
+				<th scope="col">Probe</th>
+				<th scope="col">Package</th>
+				<th scope="col">MM1</th>
+				<th scope="col">MM2</th>
+				<th scope="col">MMp</th>
+				<th scope="col">Comment</th>
+				<th scope="col">Product</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for hit in all_hits %}
+				<tr>
+					<td>{{ hit.Primer1 }}</td>
+					<td>{{ hit.Primer2 }}</td>
+					<td>{{ hit.Probe }}</td>
+					<td>{% if hit.ProbePackage != "" and hit.Primer1Package == hit.Primer2Package and hit.Primer2Package == hit.ProbePackage|replace_probe %}Same{% elif hit.Primer1Package == ""%}{% elif hit.Primer1Package == hit.Primer2Package %}Same{% else %}Different{% endif %}</td>
+					<td>{{ hit.NoMismatchesLeft }}</td>
+					<td>{{ hit.NoMismatchesRight }}</td>
+					<td>{{ hit.NoMismatchesProbe }}</td>
+					<td style="word-wrap: break-word; min-width: 150px; max-width: 150px;">{{ hit.Comment }}</td>
+					<td><a href="https://blast.ncbi.nlm.nih.gov/Blast.cgi?PROGRAM=blastn&PAGE_TYPE=BlastSearch&LINK_LOC=blasthome&QUERY={{ hit.Product }}">BLAST</a></td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	</div>
+
+{% endfor %}
+
+{% endblock %}
+

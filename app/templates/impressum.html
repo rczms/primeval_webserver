@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load widget_tweaks %}
+{% load env %}
+
+{% block breadcrumb %}
+	<li class="breadcrumb-item active">Impressum</li>
+{% endblock %}
+
+{% block stylesheet %}
+{% endblock %}
+
+{% block javascript %}
+{% endblock javascript %}
+
+{% block content %}
+
+<section class="col-xs-12 textelement" style="text-align: center;">
+
+
+	{% 'IMPRESSUM_TECH_CONTACT'|env %}
+
+	{% 'IMPRESSUM'|env %}
+
+</section>
+
+{% endblock %}

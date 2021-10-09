@@ -1,0 +1,55 @@
+{% extends 'run.html' %}
+
+{% load static %}
+{% load widget_tweaks %}
+
+{% block javascript %}
+{% endblock %}
+
+{% block runcontent %}
+
+<div class="container mt-3">
+<div class="row">
+<p>
+A table containing links to download all output files.
+</p>
+</div>
+</div>
+
+
+<table class="table" style="margin-top: 15px;">
+	<thead>
+		<tr>
+			<th scope="col">File</th>
+			<th scope="col">Description</th>
+			<th scope="col">Download</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>All results</td>
+			<td>A comma-separated file containing all combinations of primer pairs and matching probes according to the chosen parameters. Includes a mismatch visualization and gives the theoretical product which should be generated.</td>
+			<td><a class="btn btn-light" role="button" href="/media/{{ files.results_all }}" download="PRIMEval_results_all_{{ runid }}.csv"><i class="fa fa-download"></i> Download</a></td>
+		</tr>
+		<tr>
+			<td>Wobbled results</td>
+			<td>Identical to 'all results', but primers containing wobbled bases are not resolved but summarized. Therefore mismatches are no longer visualized.</td>
+			<td><a class="btn btn-light" role="button" href="/media/{{ files.results_wob }}" download="PRIMEval_results_wob_{{ runid }}.csv"><i class="fa fa-download"></i> Download</a></td>
+		</tr>
+		<tr>
+			<td>Hits</td>
+			<td>A comma-separated file containing all hits of single primers or probes according to the chosen parameters.</td>
+			<td><a class="btn btn-light" role="button" href="/media/{{ files.hits }}" download="PRIMEval_hits_all_{{ runid }}.csv"><i class="fa fa-download"></i> Download</a></td>
+		</tr>
+		{% if files.results_dimer != ""%}
+			<tr>
+				<td>Dimer Check</td>
+				<td>An Excel file containing cross-dimer (CD) and hairpin (HP) analyses of all primers and probes, and hairpin analyses of all probes, according to the chosen parameters.</td>
+				<td><a class="btn btn-light" role="button" href="/media/{{ files.results_dimer }}" download="PRIMEval_dimer_check_{{ runid }}.xlsx"><i class="fa fa-download"></i> Download</a></td>
+			</tr>
+		{% endif %}
+	</tbody>
+</table>
+
+{% endblock %}
+

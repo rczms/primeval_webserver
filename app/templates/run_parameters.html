@@ -1,0 +1,144 @@
+{% extends 'run.html' %}
+
+{% load static %}
+{% load widget_tweaks %}
+
+{% load replace_commas %}
+
+{% block javascript %}
+{% endblock %}
+
+{% block runcontent %}
+
+{% if run.failed == True %}
+<div class="container mt-3 alert alert-danger">
+<div class="row">
+<h1>Run failed.</h1>
+<p>Unfortunately, your run failed. Please have a look at the help files and try resubmitting again. If the error persists, please contact us.</p>
+</div>
+</div>
+{% endif %}
+
+<div class="container mt-3">
+<div class="row">
+<p>
+A summary table of anonymized input parameters (e.g. excluding email address).
+</p>
+</div>
+</div>
+
+<table class="table">
+	<thead>
+		<tr>
+			<th scope="col">Parameter</th>
+			<th scope="col">Value</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Run ID</td>
+			<td>{{ run.runID }}</td>
+		</tr>
+		<tr>
+			<td>Date</td>
+			<td>{{ run.date }}</td>
+		</tr>
+		<tr>
+			<td>Method</td>
+			<td>{{ run.method }}</td>
+		</tr>
+		<tr>
+			<td>Product length (bp)</td>
+			<td>{{ run.productLength }}</td>
+		</tr>
+		<tr>
+			<td>Primer mismatches (nt)</td>
+			<td>{{ run.primerMismatchesTotal }}</td>
+		</tr>
+		<tr>
+			<td>Probe mismatches (nt)</td>
+			<td>{{ run.probeMismatchesTotal }}</td>
+		</tr>
+		<tr>
+			<td>Cross-check packages</td>
+			<td>{{ run.crossCheck }}</td>
+		</tr>
+		<tr>
+			<td>Check probes only</td>
+			<td>{{ run.checkProbesOnly }}</td>
+		</tr>
+		<tr>
+			<td>Dimer check</td>
+			<td>{{ run.dimerCheck }}</td>
+		</tr>
+		<tr>
+			<td>Selected databases</td>
+			<td>{{ run.dbs|replace_commas }}</td>
+		</tr>
+		<tr>
+			<td>Primer monovalent cations (mM)</td>
+			<td>{{ run.primerMonovalentCations }}</td>
+		</tr>
+		<tr>
+			<td>Primer divalent cations (mM)</td>
+			<td>{{ run.primerDivalentCations }}</td>
+		</tr>
+		<tr>
+			<td>Primer dNTPs (mM)</td>
+			<td>{{ run.primerDNTPs }}</td>
+		</tr>
+		<tr>
+			<td>Primer annealing oligo concentration (nM)</td>
+			<td>{{ run.primerConcentration }}</td>
+		</tr>
+		<tr>
+			<td>Primer annealing temperature (°C)</td>
+			<td>{{ run.primerAnnealingTemp }}</td>
+		</tr>
+		<tr>
+			<td>Probe monovalent cations (mM)</td>
+			<td>{{ run.probeMonovalentCations }}</td>
+		</tr>
+		<tr>
+			<td>Probe divalent cations (mM)</td>
+			<td>{{ run.probeDivalentCations }}</td>
+		</tr>
+		<tr>
+			<td>Probe dNTPs (mM)</td>
+			<td>{{ run.probeDNTPs }}</td>
+		</tr>
+		<tr>
+			<td>Probe annealing oligo concentration (nM)</td>
+			<td>{{ run.probeConcentration }}</td>
+		</tr>
+		<tr>
+			<td>Probe annealing temperature (°C)</td>
+			<td>{{ run.probeAnnealingTemp }}</td>
+		</tr>
+	</tbody>
+</table>
+
+<h3 style="padding-top: 15px; padding-bottom: 10px;">Input files</h3>
+
+<table class="table">
+	<thead>
+		<tr>
+			<th scope="col">Oligo type</th>
+			<th scope="col">Filename</th>
+			<th scope="col">Type</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for file in files %}
+			<tr>
+				<td>{{ file.seqtype }}</td>
+				<td>{{ file.orig_filename }}</td>
+				<td>{{ file.filetype }}</td>
+			</tr>
+		{% endfor %}
+	</tbody>
+</table>
+
+
+{% endblock %}
+

@@ -1,0 +1,63 @@
+{% extends 'run.html' %}
+
+{% load static %}
+{% load widget_tweaks %}
+{% load keyvalue %}
+
+{% block javascript %}
+{% endblock %}
+
+{% block runcontent %}
+
+<div class="container mt-3">
+<div class="row">
+<p>
+The dimer check shows potentially conflicting oligos by identifying cross-dimers, self-dimers (primers) and hairpins (primers &amp; probes). Currently, the threshold is set to a &Delta;G value of &le; -9 kcal/mol for cross- and self-dimers. Potential hairpins are indicated for &Delta;G &le; -5 kcal/mol or T<sub>M</sub> &ge; 40°C. Thresholds will be user-defined in future releases. Undetermined T<sub>M</sub> or &Delta;G values are indicated as zero. See the <a href="{% url 'run' runid 'download' %}">download section</a> to download the complete dimer check information. 
+</p>
+</div>
+</div>
+
+{% if dimers|length == 0 %}
+No dimer checks found!
+{% endif %}
+
+
+{% for sheet, data in dimers.items %}
+	<h1 style="padding-top: 15px; padding-bottom: 10px;">{{data.1 }} check for {{ data.0 }}</h1>
+
+	{% if data.1 == "Cross-dimer" %}
+		<input type="button" class="btn btn-space btn-success" value="deltaG heatmap" onclick="window.open('{% url 'heatmap' runid sheet 'dG' %}','_blank')">	
+		{% if data.2|length > 0%}
+			<p>
+				Potential candidates for cross dimers (dG &le; -9 kcal/mol):
+				<ul>
+				{% for item in data.2 %}
+					<li>{{ item }}</li>
+				{% endfor %}
+				</ul>
+			</p>
+		{% else %}
+			<p>No cross dimers found in this oligo set!</p>
+		{% endif %}
+	{% else %}
+		<input type="button" class="btn btn-space btn-success" value="deltaG heatmap" onclick="window.open('{% url 'heatmap' runid sheet 'dG' %}','_blank')">	
+		<input type="button" class="btn btn-space btn-primary" value="Tm heatmap" onclick="window.open('{% url 'heatmap' runid sheet 'Tm' %}','_blank')">	
+		{% if data.2|length > 0%}
+			<p>
+				Potential candidates for hairpins (dG &le; -5 kcal/mol or Tm &ge; 40 °C):
+				<ul>
+				{% for item in data.2 %}
+					<li>{{ item }}</li>
+				{% endfor %}
+				</ul>
+			</p>
+		{% else %}
+			<p>No cross dimers found in this oligo set!</p>
+		{% endif %}
+	{% endif %}
+
+
+{% endfor %}
+
+{% endblock %}
+
